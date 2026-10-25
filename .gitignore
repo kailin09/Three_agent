@@ -1,0 +1,25 @@
+# ===== 敏感配置（队友需自行复制 .env.example 为 .env 并填 key）=====
+.env
+backend/.env
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+
+# ===== 数据库（运行时用户数据，不入库）=====
+*.db
+
+# ===== 日志与测试产物 =====
+*.log
+sse_*.txt
+
+# ===== 前端 =====
+node_modules/
+dist/
+
+# ===== IDE / 工作区 =====
+.joycode/
+.vscode/
+.idea/
+.DS_Store
