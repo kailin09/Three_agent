@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import ArgumentGraph from './ArgumentGraph.jsx'
+import EvidenceAuditView from './EvidenceAuditView.jsx'
 
 /** 打字机效果：text 变化后逐字显现，start=false 时不启动 */
 function useTypewriter(text, speed = 28, start = true) {
@@ -175,9 +177,55 @@ function drawRadar(ctx, items, cx, cy, r) {
   ctx.textAlign = 'left'
 }
 
-/** 像素风战报绘制 */
-function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB }) {
-  const W = 800, H = 1250
+/** 估算文本宽度（CJK≈fontSize，ASCII≈0.55×fontSize）——无ctx的高度预计算 */
+function estTextWidth(text, fontSize) {
+  let w = 0
+  for (const ch of text) {
+    w += /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(ch) ? fontSize : fontSize * 0.55
+  }
+  return w
+}
+
+/** 估算换行行数 */
+function estLines(text, fontSize, maxWidth, maxLines = 99) {
+  if (!text) return 0
+  return Math.min(maxLines, Math.max(1, Math.ceil(estTextWidth(text, fontSize) / maxWidth)))
+}
+
+/** 预计算战报总高度（与 drawReport 布局一致，含安全余量） */
+function computeReportHeight({ question, sheet, quotes, audit }) {
+  const W = 800
+  const clean = (t) => (t || '').replace(/\s+/g, ' ').trim()
+  const items = sheet?.items || []
+  const scored = items.filter((it) => Number.isFinite(it.score_a) && Number.isFinite(it.score_b))
+  let h = 285 // 顶部：标题 + 副标题 + 辩题 + 分割线
+  h += 40 + Object.keys(quotes).length * 100 + 45 // 三方金句 + 分割线
+  if (scored.length >= 3) h += 30 + 220 + 45 // 雷达图 + 分割线
+  h += 38 // 平衡单明细标题
+  for (const it of items) {
+    const la = estLines(clean(it.option_a), 13, W - 200, 4)
+    const lb = estLines(clean(it.option_b), 13, W - 200, 4)
+    h += 122 + (la + lb) * 21 // 维度名 + A/B 文字 + A/B 分数条 + 行距
+  }
+  h += 45 // 分割线
+  h += 40 + 50 + 45 // 倾向条
+  if (audit && audit.overall_score > 0) {
+    h += 45 + 42 + 42 + 50 // 分割线 + 标题 + 徽章 + 三方评分
+    h += estLines(clean(audit.summary), 14, W - 120, 3) * 24 + 20 // 审查小结
+  }
+  h += 45 + 36 + estLines(clean(sheet?.summary), 15, W - 120, 10) * 26 + 15 // 分歧总结
+  h += 36 + estLines(clean(sheet?.recommendation), 16, W - 120, 12) * 28 // 决策建议
+  return Math.max(h + 80, 700) // 底部品牌 + 安全余量
+}
+
+/** 像素风战报绘制（动态高度，含平衡单明细 + 证据审查） */
+function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB, audit }) {
+  const W = 800
+  const H = computeReportHeight({ question, sheet, quotes, audit })
+  const divider = (yy) => {
+    ctx.fillStyle = '#1e293b'
+    ctx.fillRect(50, yy, W - 100, 2)
+  }
   // 背景
   ctx.fillStyle = '#0b1220'
   ctx.fillRect(0, 0, W, H)
@@ -225,9 +273,9 @@ function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB
     const color = info.color || '#94a3b8'
     // 色块条
     ctx.fillStyle = color
-    ctx.fillRect(60, y - 18, 6, 60)
+    ctx.fillRect(60, y - 18, 6, 78)
     ctx.globalAlpha = 0.12
-    ctx.fillRect(66, y - 18, W - 126, 60)
+    ctx.fillRect(66, y - 18, W - 126, 78)
     ctx.globalAlpha = 1
     // 头像 + 名字
     ctx.font = '20px sans-serif'
@@ -235,17 +283,16 @@ function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB
     ctx.fillStyle = color
     ctx.font = 'bold 18px sans-serif'
     ctx.fillText(m.name || role, 115, y + 6)
-    // 金句（截断55字）
+    // 金句（最多120字，3行展示）
     ctx.fillStyle = '#cbd5e1'
     ctx.font = '15px sans-serif'
-    const quote = (m.content || '').replace(/\s+/g, ' ').trim().slice(0, 55)
-    wrapText(ctx, quote + (quote.length >= 55 ? '…' : ''), 115, y + 32, W - 190, 24, 2)
-    y += 85
+    const quote = (m.content || '').replace(/\s+/g, ' ').trim().slice(0, 120)
+    wrapText(ctx, quote + (quote.length >= 120 ? '…' : ''), 115, y + 32, W - 190, 24, 3)
+    y += 100
   })
 
   // 分割线
-  ctx.fillStyle = '#1e293b'
-  ctx.fillRect(50, y + 5, W - 100, 2)
+  divider(y)
   y += 45
 
   // 5维度雷达图（与页面雷达图呼应）
@@ -266,10 +313,68 @@ function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB
     ctx.fillStyle = '#ffd700'
     ctx.fillText(`■ ${optB.slice(0, 10)}`, W / 2 + 30, y + 195)
     y += 220
-    ctx.fillStyle = '#1e293b'
-    ctx.fillRect(50, y, W - 100, 2)
+    divider(y)
     y += 45
   }
+
+  // ---- 平衡单明细（5维度 A/B 对比，与页面 vs-board 一致）----
+  ctx.font = '13px "Press Start 2P", monospace'
+  ctx.fillStyle = '#22d3ee'
+  ctx.textAlign = 'left'
+  ctx.fillText('BALANCE SHEET', 60, y)
+  y += 38
+  const items = sheet?.items || []
+  items.forEach((it) => {
+    // 维度名
+    ctx.font = 'bold 16px sans-serif'
+    ctx.fillStyle = '#f1f5f9'
+    ctx.fillText(`${DIM_ICON[it.dimension] || '📌'} ${it.dimension}`, 60, y)
+    y += 28
+    // 选项 A 分析
+    ctx.font = 'bold 13px sans-serif'
+    ctx.fillStyle = '#22d3ee'
+    ctx.fillText(`A · ${optA.slice(0, 8)}`, 76, y)
+    if (Number.isFinite(it.score_a)) {
+      ctx.textAlign = 'right'
+      ctx.fillText(`${it.score_a}/10`, W - 76, y)
+      ctx.textAlign = 'left'
+    }
+    y += 20
+    ctx.fillStyle = '#cbd5e1'
+    ctx.font = '13px sans-serif'
+    y = wrapText(ctx, (it.option_a || '').replace(/\s+/g, ' ').trim(), 76, y, W - 200, 21, 4) + 4
+    if (Number.isFinite(it.score_a)) {
+      const sbW = W - 152
+      ctx.fillStyle = 'rgba(34,211,238,0.15)'
+      ctx.fillRect(76, y, sbW, 8)
+      ctx.fillStyle = '#22d3ee'
+      ctx.fillRect(76, y, (sbW * it.score_a) / 10, 8)
+    }
+    y += 20
+    // 选项 B 分析
+    ctx.font = 'bold 13px sans-serif'
+    ctx.fillStyle = '#ffd700'
+    ctx.fillText(`B · ${optB.slice(0, 8)}`, 76, y)
+    if (Number.isFinite(it.score_b)) {
+      ctx.textAlign = 'right'
+      ctx.fillText(`${it.score_b}/10`, W - 76, y)
+      ctx.textAlign = 'left'
+    }
+    y += 20
+    ctx.fillStyle = '#cbd5e1'
+    ctx.font = '13px sans-serif'
+    y = wrapText(ctx, (it.option_b || '').replace(/\s+/g, ' ').trim(), 76, y, W - 200, 21, 4) + 4
+    if (Number.isFinite(it.score_b)) {
+      const sbW = W - 152
+      ctx.fillStyle = 'rgba(255,215,0,0.15)'
+      ctx.fillRect(76, y, sbW, 8)
+      ctx.fillStyle = '#ffd700'
+      ctx.fillRect(76, y, (sbW * it.score_b) / 10, 8)
+    }
+    y += 26
+  })
+  divider(y)
+  y += 45
 
   // 倾向条
   ctx.font = '13px "Press Start 2P", monospace'
@@ -297,7 +402,64 @@ function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB
   ctx.textAlign = 'left'
   y += 45
 
+  // ---- 证据审查（可信度徽章 + 三方评分 + 审查小结）----
+  if (audit && audit.overall_score > 0) {
+    divider(y)
+    y += 45
+    ctx.font = '13px "Press Start 2P", monospace'
+    ctx.fillStyle = '#22d3ee'
+    ctx.fillText('EVIDENCE AUDIT', 60, y)
+    y += 42
+    const overall = audit.overall_score
+    const oc = overall >= 8 ? '#34d399' : overall >= 6 ? '#fbbf24' : overall >= 4 ? '#fb923c' : '#f87171'
+    // 整体可信度徽章
+    ctx.fillStyle = oc
+    ctx.fillRect(60, y - 24, 120, 34)
+    ctx.fillStyle = '#0b1220'
+    ctx.font = 'bold 15px "Press Start 2P", monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText(`${overall}/10`, 120, y)
+    ctx.textAlign = 'left'
+    ctx.fillStyle = oc
+    ctx.font = 'bold 18px sans-serif'
+    ctx.fillText(audit.verdict || '', 200, y)
+    y += 42
+    // 三方评分行
+    const audAgents = audit.agents || []
+    const colW = (W - 120) / 3
+    audAgents.forEach((a, i) => {
+      const info = meta[a.role] || {}
+      const cx = 60 + i * colW
+      const cred = a.credibility || 0
+      const ac = cred >= 8 ? '#34d399' : cred >= 6 ? '#fbbf24' : cred >= 4 ? '#fb923c' : '#f87171'
+      ctx.font = '15px sans-serif'
+      ctx.fillText(info.avatar || '🗣️', cx, y)
+      ctx.fillStyle = '#e2e8f0'
+      ctx.font = 'bold 14px sans-serif'
+      ctx.fillText(info.name || a.role, cx + 24, y)
+      ctx.fillStyle = ac
+      ctx.font = 'bold 14px "Press Start 2P", monospace'
+      ctx.textAlign = 'right'
+      ctx.fillText(`${cred}`, cx + colW - 12, y)
+      ctx.textAlign = 'left'
+      const nIss = (a.issues || []).length
+      ctx.fillStyle = nIss > 0 ? '#fb923c' : '#64748b'
+      ctx.font = '12px sans-serif'
+      ctx.fillText(nIss > 0 ? `${nIss} 个问题` : '无问题', cx + 24, y + 22)
+    })
+    y += 50
+    // 审查小结
+    if (audit.summary) {
+      ctx.fillStyle = '#94a3b8'
+      ctx.font = '14px sans-serif'
+      y = wrapText(ctx, (audit.summary || '').replace(/\s+/g, ' ').trim(), 60, y, W - 120, 24, 3)
+    }
+    y += 20
+  }
+
   // 分歧与共识
+  divider(y)
+  y += 45
   ctx.font = '13px "Press Start 2P", monospace'
   ctx.fillStyle = '#22d3ee'
   ctx.fillText('SUMMARY', 60, y)
@@ -305,7 +467,7 @@ function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB
   ctx.fillStyle = '#cbd5e1'
   ctx.font = '15px sans-serif'
   const sum = (sheet?.summary || '').replace(/\s+/g, ' ').trim()
-  y = wrapText(ctx, sum, 60, y, W - 120, 26, 5)
+  y = wrapText(ctx, sum, 60, y, W - 120, 26, 10)
   y += 15
 
   // 结论
@@ -316,7 +478,7 @@ function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB
   ctx.fillStyle = '#e2e8f0'
   ctx.font = '16px sans-serif'
   const rec = (sheet?.recommendation || '').replace(/\s+/g, ' ').trim()
-  y = wrapText(ctx, rec, 60, y, W - 120, 28, 6)
+  y = wrapText(ctx, rec, 60, y, W - 120, 28, 12)
 
   // 底部品牌
   ctx.textAlign = 'center'
@@ -325,8 +487,8 @@ function drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB
   ctx.fillText('THREE-WAY DEBATE · DECISION COACH', W / 2, H - 50)
 }
 
-/** 导出像素风战报 PNG */
-async function exportBattleReport({ debateId, question, sheet }) {
+/** 导出像素风战报 PNG（动态高度，含平衡单明细 + 证据审查） */
+async function exportBattleReport({ debateId, question, sheet, audit }) {
   // 等待网络像素字体加载完成，避免Canvas标题fallback
   try {
     await document.fonts.load('30px "Press Start 2P"')
@@ -360,11 +522,12 @@ async function exportBattleReport({ debateId, question, sheet }) {
   const pctA = total > 0 ? Math.round((sumA / total) * 100) : 50
   const pctB = 100 - pctA
 
+  const H = computeReportHeight({ question, sheet, quotes, audit })
   const canvas = document.createElement('canvas')
   canvas.width = 800
-  canvas.height = 1250
+  canvas.height = H
   const ctx = canvas.getContext('2d')
-  drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB })
+  drawReport(ctx, { question, sheet, quotes, meta, pctA, pctB, optA, optB, audit })
   const url = canvas.toDataURL('image/png')
   const a = document.createElement('a')
   a.href = url
@@ -394,13 +557,19 @@ export default function BalanceSheetView({
   const [sheetVersion, setSheetVersion] = useState(0) // 变化时触发评分条动画重放
   const [exporting, setExporting] = useState(false) // 战报导出中
   const [profile, setProfile] = useState(null) // 跨会话用户决策画像（长期记忆可视化）
+  // 论点关系图 + 证据审查（辩论结束后的增强分析，与平衡单并行/串行请求）
+  const [graph, setGraph] = useState(null)
+  const [graphLoading, setGraphLoading] = useState(true)
+  const [audit, setAudit] = useState(null)
+  const [auditLoading, setAuditLoading] = useState(true)
+  const [agentsList, setAgentsList] = useState([]) // Agent 元信息（供新组件着色）
 
   /** 导出像素风战报图 */
   const handleExportReport = async () => {
     if (exporting || !sheet) return
     setExporting(true)
     try {
-      await exportBattleReport({ debateId, question, sheet })
+      await exportBattleReport({ debateId, question, sheet, audit })
     } catch (e) {
       setError(e.message || '战报导出失败')
     } finally {
@@ -446,34 +615,58 @@ export default function BalanceSheetView({
   }
 
   useEffect(() => {
-    if (initialSheet) return
     let alive = true
-    const fetchSheet = async () => {
+
+    // Agent 元信息（供关系图/审查报告着色，失败静默）
+    fetch('/api/agents')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (alive) setAgentsList(d) })
+      .catch(() => {})
+
+    // 并行：论点关系图 + 证据审查（两者互不依赖，历史回看也加载）
+    fetch(`/api/debate/${debateId}/argument-graph`, { method: 'POST' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive) { setGraph(d); setGraphLoading(false) } })
+      .catch(() => { if (alive) setGraphLoading(false) })
+
+    const auditP = fetch(`/api/debate/${debateId}/evidence-audit`, { method: 'POST' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive) { setAudit(d); setAuditLoading(false); return d } })
+      .catch(() => { if (alive) { setAuditLoading(false); return null } })
+
+    // 平衡单：有缓存直接用；无缓存则等证据审查完成后请求（审查结果注入，可信度低的论据降权）
+    if (initialSheet) {
+      setLoading(false)
+      return () => { alive = false }
+    }
+    auditP.then((auditData) => {
+      if (!alive) return
       setLoading(true)
       setError('')
-      try {
-        const resp = await fetch(`/api/debate/${debateId}/balance-sheet`, {
-          method: 'POST',
+      fetch(`/api/debate/${debateId}/balance-sheet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(auditData ? { audit: auditData } : {}),
+      })
+        .then(async (r) => {
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}))
+            throw new Error(err.detail || `生成失败 (${r.status})`)
+          }
+          return r.json()
         })
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}))
-          throw new Error(err.detail || `生成失败 (${resp.status})`)
-        }
-        const data = await resp.json()
-        if (alive) {
-          setSheet(data)
-          onSheetReady(data)
-        }
-      } catch (e) {
-        if (alive) setError(e.message || '生成平衡单失败')
-      } finally {
-        if (alive) setLoading(false)
-      }
-    }
-    fetchSheet()
-    return () => {
-      alive = false
-    }
+        .then((d) => {
+          if (alive) { setSheet(d); onSheetReady(d) }
+        })
+        .catch((e) => {
+          if (alive) setError(e.message || '生成平衡单失败')
+        })
+        .finally(() => {
+          if (alive) setLoading(false)
+        })
+    })
+
+    return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debateId])
 
@@ -489,47 +682,12 @@ export default function BalanceSheetView({
   const { shown: summaryShown, done: summaryDone } = useTypewriter(sheet?.summary || '', 28, !!sheet)
   const { shown: recShown, done: recDone } = useTypewriter(sheet?.recommendation || '', 28, summaryDone)
 
-  if (loading) {
-    return (
-      <div className="sheet-page" style={{ textAlign: 'center', paddingTop: 120 }}>
-        <h2>PROCESSING...</h2>
-        <p className="question-line" style={{ marginBottom: 24 }}>
-          决策顾问正在阅读整场辩论记录，为你提炼平衡单
-        </p>
-        <div className="loading-dots" style={{ fontSize: 40, color: 'var(--accent)' }}>
-          <span>●</span>
-          <span>●</span>
-          <span>●</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="sheet-page" style={{ textAlign: 'center', paddingTop: 120 }}>
-        <h2>FAILED</h2>
-        <p className="question-line" style={{ color: '#f87171', marginBottom: 24 }}>
-          {error}
-        </p>
-        <div className="sheet-actions" style={{ justifyContent: 'center' }}>
-          <button className="btn btn-primary" onClick={() => window.location.reload()}>
-            RETRY
-          </button>
-          <button className="btn btn-ghost" onClick={onRestart}>
-            NEW GAME
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  const optA = sheet.options?.[0] || '选项A'
-  const optB = sheet.options?.[1] || '选项B'
+  const optA = sheet?.options?.[0] || '选项A'
+  const optB = sheet?.options?.[1] || '选项B'
 
   // ---- 评分可视化（降级容错：无分数的维度不画条）----
   const hasScore = (v) => Number.isFinite(v) && v >= 1 && v <= 10
-  const scored = (sheet.items || []).filter((it) => hasScore(it.score_a) && hasScore(it.score_b))
+  const scored = (sheet?.items || []).filter((it) => hasScore(it.score_a) && hasScore(it.score_b))
   const sumA = scored.reduce((s, it) => s + it.score_a, 0)
   const sumB = scored.reduce((s, it) => s + it.score_b, 0)
   const total = sumA + sumB
@@ -591,6 +749,46 @@ export default function BalanceSheetView({
         </div>
       )}
 
+      {/* 论点关系图：多Agent协作过程可视化（支持/反驳/修正交锋结构） */}
+      {graphLoading ? (
+        <div className="card block-loading">
+          <span className="loading-dots"><span>●</span><span>●</span><span>●</span></span>
+          分析论点交锋关系中…
+        </div>
+      ) : graph && graph.nodes?.length > 0 ? (
+        <ArgumentGraph graph={graph} agents={agentsList} />
+      ) : null}
+
+      {/* 证据审查报告：独立审查员对三方论据的可信度评估 */}
+      {auditLoading ? (
+        <div className="card block-loading">
+          <span className="loading-dots"><span>●</span><span>●</span><span>●</span></span>
+          独立审查员正在核查证据…
+        </div>
+      ) : (
+        <EvidenceAuditView audit={audit} agents={agentsList} />
+      )}
+
+      {/* 平衡单主体：证据审查完成后生成（审查结果注入，可信度低的论据降权） */}
+      {loading ? (
+        <div className="card block-loading big">
+          <span className="loading-dots"><span>●</span><span>●</span><span>●</span></span>
+          决策顾问正在生成平衡单…
+        </div>
+      ) : error ? (
+        <div className="card block-error">
+          <p className="block-error-text">{error}</p>
+          <div className="sheet-actions" style={{ justifyContent: 'center' }}>
+            <button className="btn btn-primary" onClick={() => window.location.reload()}>
+              RETRY
+            </button>
+            <button className="btn btn-ghost" onClick={onRestart}>
+              NEW GAME
+            </button>
+          </div>
+        </div>
+      ) : sheet ? (
+        <>
       <div className="vs-board">
         <div className="vs-header">
           <span className="vs-name a">{optA}</span>
@@ -743,6 +941,8 @@ export default function BalanceSheetView({
           {exporting ? '生成中…' : '📥 导出战报'}
         </button>
       </div>
+        </>
+      ) : null}
     </div>
   )
 }

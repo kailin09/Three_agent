@@ -764,6 +764,16 @@ body::before {
   border-color: color-mix(in srgb, var(--agent-color) 70%, var(--card-border));
   background: color-mix(in srgb, var(--agent-color) 12%, var(--bg));
 }
+.tool-card.multi {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.tool-card .tool-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .tool-card .tool-icon {
   font-size: 14px;
 }
@@ -786,6 +796,15 @@ body::before {
   padding: 2px 6px;
   border-radius: 3px;
   word-break: break-all;
+}
+.tool-card.multi .tool-result {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 /* 用户插话：游戏系统消息样式 */
@@ -1768,4 +1787,186 @@ body::before {
   .sheet-section h3 { font-size: 13px; }
   .followup-input-row { flex-direction: column; }
   .new-msg-btn { font-size: 10px; padding: 6px 12px; }
+}
+
+/* ===== 区块级 loading / error（渐进式渲染占位）===== */
+.block-loading {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 28px 16px; color: var(--text-dim); font-size: 13px;
+  border: 1px dashed var(--card-border);
+}
+.block-loading.big { padding: 48px 16px; font-size: 14px; }
+.block-loading .loading-dots { font-size: 18px; color: var(--cyan); }
+.block-error { padding: 32px 16px; text-align: center; border: 1px solid var(--danger); }
+.block-error-text { color: #f87171; font-size: 13px; margin-bottom: 16px; }
+
+/* ===== 论点关系图 ===== */
+.arg-graph-card { margin-bottom: 16px; }
+.arg-graph-card h3 { font-size: 14px; color: var(--cyan); margin-bottom: 8px; }
+.arg-summary {
+  font-size: 12px; color: var(--text-dim); margin-bottom: 12px;
+  padding-left: 10px; border-left: 3px solid var(--cyan);
+}
+.arg-legend {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 14px; padding: 8px 10px;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--card-border);
+}
+.arg-legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-dim);
+}
+.arg-legend-hint { font-size: 10px; color: #555577; margin-left: auto; }
+
+.arg-graph-wrap { position: relative; overflow: visible; }
+.arg-svg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 1; overflow: visible;
+}
+.arg-svg .arg-edge { pointer-events: auto; transition: opacity 0.2s; }
+.arg-svg .arg-edge.dim { opacity: 0.12; }
+.arg-svg .arg-edge.hot path:first-child { filter: drop-shadow(0 0 4px currentColor); }
+.arg-edge-label {
+  font-size: 10px; font-family: var(--pixel-font);
+  paint-order: stroke; stroke: #0d0d1a; stroke-width: 3px;
+}
+
+.arg-grid {
+  position: relative; z-index: 2;
+  display: grid; gap: 0;
+  grid-template-columns: 36px repeat(3, 1fr);
+}
+.arg-corner { grid-column: 1; }
+.arg-col-head {
+  text-align: center; font-size: 11px; font-weight: bold;
+  padding: 6px 4px 10px; font-family: var(--pixel-font);
+}
+.arg-row-group { display: contents; }
+.arg-round-label {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #555577; font-family: var(--pixel-font);
+  border-right: 1px dashed var(--card-border);
+}
+.arg-cell {
+  padding: 4px 6px; display: flex; flex-direction: column; gap: 6px;
+  border-bottom: 1px dashed rgba(74,74,110,0.4);
+  min-height: 40px;
+}
+.arg-node {
+  position: relative; cursor: pointer;
+  padding: 7px 8px 7px 10px;
+  background: var(--bg-soft);
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--nc, var(--cyan));
+  font-size: 11px; line-height: 1.5; color: var(--text);
+  transition: opacity 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.arg-node:hover, .arg-node.hot {
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.4), 0 0 8px color-mix(in srgb, var(--nc) 40%, transparent);
+  transform: translateX(1px);
+}
+.arg-node.dim { opacity: 0.3; }
+.arg-node-id {
+  display: inline-block; font-size: 9px; font-family: var(--pixel-font);
+  color: var(--nc, var(--cyan)); margin-right: 6px; opacity: 0.9;
+}
+.arg-node-text { word-break: break-all; }
+.arg-detail {
+  margin-top: 12px; padding: 10px 12px;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--card-border);
+  font-size: 12px; color: var(--text); line-height: 1.6;
+}
+.arg-detail b { font-family: var(--pixel-font); font-size: 11px; margin-right: 8px; }
+
+/* ===== 证据审查报告 ===== */
+.audit-card { margin-bottom: 16px; }
+.audit-card h3 { font-size: 14px; color: var(--gold); margin-bottom: 8px; }
+.audit-skip { border-style: dashed; }
+.audit-skip-text { font-size: 12px; color: var(--text-dim); }
+.audit-summary {
+  font-size: 12px; color: var(--text-dim); margin-bottom: 14px;
+  padding-left: 10px; border-left: 3px solid var(--gold);
+}
+
+.audit-overall {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; margin-bottom: 16px;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--card-border);
+}
+.audit-overall-badge {
+  display: flex; align-items: baseline; gap: 2px;
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--oc, var(--gold)) 15%, transparent);
+  border: 2px solid var(--oc, var(--gold));
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4), 0 0 10px color-mix(in srgb, var(--oc, var(--gold)) 25%, transparent);
+}
+.audit-overall-score {
+  font-family: var(--pixel-font); font-size: 22px; color: var(--oc, var(--gold));
+}
+.audit-overall-max { font-family: var(--pixel-font); font-size: 10px; color: var(--text-dim); }
+.audit-overall-info { display: flex; flex-direction: column; gap: 4px; }
+.audit-overall-info b { font-size: 14px; }
+.audit-overall-sub { font-size: 11px; color: var(--text-dim); }
+
+.audit-agents { display: flex; flex-direction: column; gap: 12px; }
+.audit-agent {
+  padding: 10px 12px;
+  background: var(--bg-soft); border: 1px solid var(--card-border);
+}
+.audit-agent-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 8px;
+}
+.audit-agent-name { font-size: 13px; font-weight: bold; white-space: nowrap; }
+.audit-cred-bar {
+  position: relative; flex: 1; max-width: 180px; height: 16px;
+  background: rgba(0,0,0,0.4); border: 1px solid var(--card-border);
+}
+.audit-cred-fill { height: 100%; transition: width 0.8s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.audit-cred-num {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  font-size: 10px; font-family: var(--pixel-font); color: var(--text);
+  text-shadow: 1px 1px 0 #000;
+}
+.audit-issues { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.audit-issue {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 6px 8px; font-size: 11px; line-height: 1.5;
+  background: rgba(0,0,0,0.2);
+  border-left: 2px solid var(--ic, var(--danger));
+}
+.audit-issue-icon { flex-shrink: 0; }
+.audit-issue-type {
+  flex-shrink: 0; font-size: 10px; color: var(--ic, var(--danger));
+  font-family: var(--pixel-font); opacity: 0.85;
+}
+.audit-issue-detail { color: var(--text-dim); }
+.audit-clean { font-size: 11px; color: var(--green); margin: 4px 0 0; }
+
+.audit-unanswered {
+  margin-top: 14px; padding: 10px 12px;
+  background: rgba(251, 191, 36, 0.06); border: 1px solid rgba(251, 191, 36, 0.3);
+}
+.audit-unanswered h4 { font-size: 12px; color: var(--gold); margin-bottom: 8px; }
+.audit-unanswered-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 0; font-size: 11px; color: var(--text);
+}
+.audit-qa-from, .audit-qa-to { font-size: 14px; }
+.audit-qa-arrow { color: var(--text-dim); font-size: 11px; }
+.audit-qa-text { color: var(--text-dim); }
+.audit-unanswered-hint {
+  margin-top: 8px; font-size: 10px; color: #777799;
+  padding-top: 8px; border-top: 1px dashed rgba(251,191,36,0.2);
+}
+
+/* 关系图/审查报告在窄屏下的适配 */
+@media (max-width: 640px) {
+  .arg-grid { grid-template-columns: 28px repeat(3, 1fr); }
+  .arg-col-head { font-size: 9px; }
+  .arg-node { font-size: 10px; padding: 5px 6px 5px 8px; }
+  .arg-node-id { font-size: 8px; }
+  .audit-overall { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .audit-agent-head { flex-wrap: wrap; }
+  .audit-cred-bar { max-width: 140px; }
 }

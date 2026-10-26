@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    allowedHosts: true,
     proxy: {
       // 把 /api 请求代理到 FastAPI 后端，避免跨域
       '/api': {

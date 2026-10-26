@@ -34,7 +34,15 @@ _PLAN_FEWSHOT = (
     '{"need_tool": false, "tools": [], "reason": "本论点侧重价值观和故事，无需精确数据"}\n\n'
     "示例3——辩手「赵姐·风险派」，主题「35岁裸辞转行做程序员来得及吗？」：\n"
     '{"need_tool": true, "tools": [{"name": "risk_simulate", "arguments": {"success_rate": 0.3, "trials": 1000}}, '
-    '{"name": "get_current_date", "arguments": {}}], "reason": "辩题提到35岁，模拟转行30%成功概率并用当前日期算年龄账"}'
+    '{"name": "get_current_date", "arguments": {}}], "reason": "辩题提到35岁，模拟转行30%成功概率并用当前日期算年龄账"}\n\n'
+    "示例4——辩手「小林·理想派」，主题「二本毕业该不该去北上广闯一闯？」：\n"
+    '{"need_tool": true, "tools": [{"name": "career_path", "arguments": {"current_role": "二本应届毕业生", "target_role": "一线城市互联网运营", "years": 3}}], '
+    '"reason": "辩题涉及去大城市发展，分析从二本毕业到一线运营的能力差距和成长路径"}\n\n'
+    "示例5——辩手「赵姐·风险派」，主题「年薪25万该不该花50万去留学？」：\n"
+    '{"need_tool": true, "tools": [{"name": "sensitivity_analysis", "arguments": {"base_value": 500000, "factors": '
+    '[{"name": "汇率波动", "change_pct": -10}, {"name": "毕业后起薪上涨", "change_pct": 20}, {"name": "政策收紧影响就业", "change_pct": -15}]}}, '
+    '{"name": "risk_simulate", "arguments": {"success_rate": 0.6, "trials": 1000, "optimistic_rate": 0.7, "pessimistic_rate": 0.45}}], '
+    '"reason": "辩题提到50万留学投入，分析各因素对总成本的影响并做多场景成功概率模拟"}'
 )
 
 
@@ -376,8 +384,17 @@ class DebateSession:
             "- calculator(expression)：计算数学表达式，expression为字符串，"
             "如 \"15000*12\"、\"800000*0.3-150000\"\n"
             "- get_current_date()：获取当前日期（无需参数，arguments给空对象{}）\n"
-            "- risk_simulate(success_rate, trials)：蒙特卡洛风险模拟，"
-            "success_rate为0~1的小数，trials为模拟次数（如1000）\n\n"
+            "- risk_simulate(success_rate, trials, optimistic_rate, pessimistic_rate)："
+            "多场景蒙特卡洛风险模拟，success_rate为0~1的小数（基准概率），"
+            "trials为模拟次数（如1000），optimistic_rate/pessimistic_rate为可选的"
+            "乐观/悲观场景概率（0~1小数，不传则自动推算）\n"
+            "- career_path(current_role, target_role, years)：学业与职业路径分析，"
+            "current_role为当前身份，target_role为目标方向，years为规划年数（如3），"
+            "输出能力差距、里程碑和风险提示\n"
+            "- sensitivity_analysis(base_value, factors)：敏感性分析，"
+            "base_value为基准值（如500000总成本），factors为影响因素数组，"
+            "每个元素含name(因素名)和change_pct(变化百分比，如-20表示下降20%)，"
+            "输出各因素影响排序和关键发现\n\n"
             f"{_PLAN_FEWSHOT}"
         )
         try:
@@ -385,7 +402,7 @@ class DebateSession:
                 [{"role": "system", "content": _PLAN_SYSTEM},
                  {"role": "user", "content": user_content}],
                 temperature=0.1,
-                max_tokens=300,
+                max_tokens=400,
             )
             m = re.search(r'\{.*\}', raw, re.DOTALL)
             if not m:
@@ -397,7 +414,8 @@ class DebateSession:
             for t in plan.get("tools", [])[:2]:
                 name = t.get("name", "")
                 args = t.get("arguments", {})
-                if name in ("calculator", "get_current_date", "risk_simulate"):
+                if name in ("calculator", "get_current_date", "risk_simulate",
+                            "career_path", "sensitivity_analysis"):
                     calls.append((name, json.dumps(args, ensure_ascii=False)))
             return calls
         except Exception:
@@ -441,7 +459,7 @@ class DebateSession:
                 [{"role": "system", "content": _DIRECTOR_PLAN_SYSTEM},
                  {"role": "user", "content": user_content}],
                 temperature=0.3,
-                max_tokens=300,
+                max_tokens=400,
             )
             m = re.search(r'\{.*\}', raw, re.DOTALL)
             if not m:
@@ -812,7 +830,7 @@ class DebateSession:
                      f"结论必须回到并强化你的原有立场，"
                      f"150~200字，直接输出发言内容。")}],
                 temperature=0.7,
-                max_tokens=300,
+                max_tokens=400,
             )
             revised = revised.strip()[:230]
             # 复检：重试版必须命中关键词才算修正成功

@@ -61,10 +61,12 @@ def _extract_json(text: str) -> dict:
 
 
 async def generate_balance_sheet(question: str, history: List[Dict],
-                                  profile_context: str = "") -> dict:
+                                  profile_context: str = "",
+                                  audit_context: str = "") -> dict:
     """根据辩论历史生成决策平衡单
 
     profile_context: 跨会话用户画像注入块（可选），让顾问能结合决策者历史风格给建议
+    audit_context: 证据审查报告注入块（可选），让顾问参考证据可信度调整评分与建议
     """
     transcript = "\n\n".join(
         f"【{m['name']}】{m['content']}"
@@ -86,6 +88,15 @@ async def generate_balance_sheet(question: str, history: List[Dict],
             f"\n\n{profile_context}\n"
             f"请结合决策者的上述画像：summary可点出本场决策与TA历史风格的关联；"
             f"recommendation给出更贴合TA决策风格和关注维度的建议。"
+        )
+    # 证据审查消费：注入独立审查报告，可信度低的论据降权、未答质疑提示验证
+    if audit_context:
+        prompt += (
+            f"\n\n{audit_context}\n"
+            f"请参考上述证据审查报告生成平衡单："
+            f"评分时对可信度偏低（≤5分）辩手的论据适当降权；"
+            f"对未回应的质疑，在 recommendation 的下一步验证动作中提示决策者自行求证；"
+            f"summary 可点出证据质量对结论置信度的影响。"
         )
     raw = await chat(
         [{"role": "user", "content": prompt}],

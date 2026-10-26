@@ -6,6 +6,8 @@ const TOOL_META = {
   calculator: { icon: '🧮', label: '计算器' },
   get_current_date: { icon: '📅', label: '日期查询' },
   risk_simulate: { icon: '🎲', label: '风险模拟' },
+  career_path: { icon: '🧭', label: '职业路径' },
+  sensitivity_analysis: { icon: '📊', label: '敏感性分析' },
 }
 
 /** 钢铁人反驳点名检测：辩手复述环节固定为「XX提到/指出/认为…」格式 */
@@ -533,13 +535,15 @@ export default function DebateArena({ debate, onConclude }) {
                       <div className="tool-list">
                         {m.tools.map((t, ti) => {
                           const meta = TOOL_META[t.name] || { icon: '🔧', label: t.name }
+                          const multi = !t.pending && typeof t.result === 'string' && t.result.includes('\n')
                           return (
-                            <div key={ti} className={`tool-card ${t.pending ? 'pending' : 'done'}`}>
-                              <span className="tool-icon">{meta.icon}</span>
-                              <span className="tool-label">{meta.label}</span>
-                              {t.pending ? (
-                                <span className="tool-status">执行中…</span>
-                              ) : (
+                            <div key={ti} className={`tool-card ${t.pending ? 'pending' : 'done'} ${multi ? 'multi' : ''}`}>
+                              <div className="tool-head">
+                                <span className="tool-icon">{meta.icon}</span>
+                                <span className="tool-label">{meta.label}</span>
+                                {t.pending && <span className="tool-status">执行中…</span>}
+                              </div>
+                              {!t.pending && (
                                 <span className="tool-result">{t.result}</span>
                               )}
                             </div>

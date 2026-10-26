@@ -8,8 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from agents import AGENTS
+from argument_graph import extract_argument_graph
 from balance_sheet import generate_balance_sheet, generate_followup
 from debate_engine import create_session, get_session
+from evidence_audit import audit_evidence, build_audit_context
 from memory_profile import (build_profile_context, get_debates_count,
                              get_profile, init_profile_table)
 from models import FollowupRequest, InterjectRequest, StartDebateRequest
@@ -157,8 +159,11 @@ async def list_debates(limit: int = 50):
 # ---------- 决策平衡单 ----------
 
 @app.post("/api/debate/{debate_id}/balance-sheet")
-async def get_balance_sheet(debate_id: str):
-    """辩论结束后生成决策平衡单（支持重启后基于持久化历史生成）"""
+async def get_balance_sheet(debate_id: str, body: dict = None):
+    """辩论结束后生成决策平衡单（支持重启后基于持久化历史生成）
+
+    可选 body: {"audit": {...}} — 证据审查结果，注入后顾问可参考可信度调整评分
+    """
     session = get_session(debate_id)
     if session:
         question, history = session.question, session.history
@@ -170,12 +175,46 @@ async def get_balance_sheet(debate_id: str):
         question, history = record["question"], record["history"]
     if not history:
         raise HTTPException(status_code=400, detail="还没有任何发言，无法生成平衡单")
+    # 证据审查结果注入（前端先审查再生成平衡单时传入）
+    audit_context = build_audit_context(body["audit"]) if body and body.get("audit") else ""
     try:
         sheet = await generate_balance_sheet(
-            question, history, build_profile_context())
+            question, history, build_profile_context(), audit_context)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"平衡单生成失败：{e}")
     return sheet
+
+
+@app.post("/api/debate/{debate_id}/argument-graph")
+async def get_argument_graph(debate_id: str):
+    """论点关系图：提取论点节点与支持/反驳/修正关系（辩论结束后调用）"""
+    session = get_session(debate_id)
+    if session:
+        question, history = session.question, session.history
+    else:
+        record = storage.load_debate(debate_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="辩论不存在")
+        question, history = record["question"], record["history"]
+    if not history:
+        raise HTTPException(status_code=400, detail="还没有任何发言，无法提取论点关系")
+    return await extract_argument_graph(question, history)
+
+
+@app.post("/api/debate/{debate_id}/evidence-audit")
+async def get_evidence_audit(debate_id: str):
+    """证据审查：独立检查三方辩手的数据/计算/逻辑/未答质疑，输出可信度"""
+    session = get_session(debate_id)
+    if session:
+        question, history = session.question, session.history
+    else:
+        record = storage.load_debate(debate_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="辩论不存在")
+        question, history = record["question"], record["history"]
+    if not history:
+        raise HTTPException(status_code=400, detail="还没有任何发言，无法审查证据")
+    return await audit_evidence(question, history)
 
 
 @app.post("/api/debate/{debate_id}/balance-sheet/followup")
