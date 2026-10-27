@@ -1,0 +1,43 @@
+name: Publish education demos
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Prepare education pages
+        run: |
+          mkdir -p _site/src
+          cp frontend/education-index.html _site/index.html
+          cp frontend/classroom.html frontend/transfer-diagnosis.html _site/
+          cp frontend/src/classroom-demo.js frontend/src/classroom.css frontend/src/transfer-demo.js frontend/src/transfer-cards.css _site/src/
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Publish site
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3f6fc" />
+    <title>知行教育实验室</title>
+    <style>
+      :root { color-scheme: light; font-family: "Microsoft YaHei", "Noto Sans SC", sans-serif; color: #172b4d; background: #f3f6fc; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; padding: 44px 24px; background: linear-gradient(145deg, #eef4ff, #f7f8fc 52%, #edf6f7); }
+      main { width: min(100%, 920px); margin: 0 auto; }
+      header { margin: 10px 0 32px; }
+      .eyebrow { color: #287fd4; font-size: 12px; font-weight: 700; letter-spacing: .16em; }
+      h1 { margin: 10px 0; font-size: clamp(28px, 5vw, 42px); letter-spacing: -.04em; }
+      header p { max-width: 600px; color: #637490; line-height: 1.8; }
+      .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      a.card { display: block; min-height: 230px; padding: 26px; border: 1px solid #dfe7f2; border-radius: 20px; background: #fff; color: inherit; text-decoration: none; box-shadow: 0 10px 30px #294b7810; transition: transform .18s, box-shadow .18s; }
+      a.card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px #294b7818; }
+      .icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; color: #fff; background: linear-gradient(145deg, #1985eb, #11b8cb 60%, #7456ed); font-size: 22px; }
+      .label { margin-top: 22px; color: #7990ad; font-size: 11px; letter-spacing: .12em; }
+      h2 { margin: 7px 0; font-size: 21px; }
+      .description { color: #687992; font-size: 13px; line-height: 1.75; }
+      .open { display: inline-block; margin-top: 16px; color: #257bd0; font-size: 12px; font-weight: 700; }
+      footer { margin-top: 24px; color: #91a0b5; font-size: 11px; line-height: 1.7; }
+      @media (max-width: 640px) { body { padding: 28px 16px; }.cards { grid-template-columns: 1fr; }a.card { min-height: 195px; padding: 21px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="eyebrow">LEARNING BY DOING</span>
+        <h1>知行教育实验室</h1>
+        <p>两个正在探索中的课堂工具：在课堂情境里观察教学决策，也把学过的知识带到陌生问题中试一试。</p>
+      </header>
+      <section class="cards" aria-label="教育工具">
+        <a class="card" href="./classroom.html">
+          <span class="icon">课</span>
+          <div class="label">CLASSROOM SANDBOX</div>
+          <h2>微格课堂 · 教育沙盘</h2>
+          <div class="description">进入模拟课堂，尝试不同教学策略，观察课堂反应与教学过程。</div>
+          <span class="open">打开教育沙盘　↗</span>
+        </a>
+        <a class="card" href="./transfer-diagnosis.html">
+          <span class="icon">迁</span>
+          <div class="label">TRANSFER LEARNING CHECK</div>
+          <h2>知识迁移诊断</h2>
+          <div class="description">选择现有题组，或输入年级、学科与知识点，检查自己如何把知识用到新情境。</div>
+          <span class="open">开始迁移练习　↗</span>
+        </a>
+      </section>
+      <footer>原型项目：生成式模型题目尚需教师复核。公开演示页不托管模型 API 后端。</footer>
+    </main>
+  </body>
+</html>

@@ -15,9 +15,11 @@ from evidence_audit import audit_evidence, build_audit_context
 from memory_profile import (build_profile_context, get_debates_count,
                              get_profile, init_profile_table)
 from models import FollowupRequest, InterjectRequest, StartDebateRequest
+from transfer_learning import router as transfer_router
 import storage
 
 app = FastAPI(title="多Agent辩论决策陪练", version="1.1.0")
+app.include_router(transfer_router)
 
 # 启动时初始化数据库，并将上次未完成的辩论标记为中断（历史保留可查）
 storage.init_db()
