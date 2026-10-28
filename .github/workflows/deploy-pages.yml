@@ -25,7 +25,8 @@ jobs:
           mkdir -p _site/src
           cp frontend/education-index.html _site/index.html
           cp frontend/classroom.html frontend/classroom-report.html frontend/transfer-diagnosis.html frontend/experiment-guard.html _site/
-          cp frontend/src/classroom-demo.js frontend/src/classroom.css frontend/src/transfer-demo.js frontend/src/transfer-cards.css frontend/src/experiment-guard.js frontend/src/experiment-guard.css _site/src/
+          cp frontend/src/classroom-demo.js frontend/src/classroom.css frontend/src/transfer-demo.js frontend/src/transfer-cards.css frontend/src/experiment-guard.js frontend/src/experiment-guard.css frontend/src/experiment-guard-theme.css _site/src/
+          cp frontend/BEAUTIFUL_UI_LICENSE.txt _site/
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
