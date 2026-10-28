@@ -9,7 +9,7 @@
       :root { color-scheme: light; font-family: "Microsoft YaHei", "Noto Sans SC", sans-serif; color: #172b4d; background: #f3f6fc; }
       * { box-sizing: border-box; }
       body { min-height: 100vh; margin: 0; padding: 44px 24px; background: linear-gradient(145deg, #eef4ff, #f7f8fc 52%, #edf6f7); }
-      main { width: min(100%, 920px); margin: 0 auto; }
+      main { width: min(100%, 1100px); margin: 0 auto; }
       header { margin: 10px 0 32px; }
       .eyebrow { color: #287fd4; font-size: 12px; font-weight: 700; letter-spacing: .16em; }
       h1 { margin: 10px 0; font-size: clamp(28px, 5vw, 42px); letter-spacing: -.04em; }
@@ -24,7 +24,7 @@
       .use-step span { display: inline-grid; width: 23px; height: 23px; margin-bottom: 10px; place-items: center; border-radius: 8px; color: #2d80d4; background: #eaf3ff; font-size: 11px; font-weight: 700; }
       .report-link { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 24px; padding: 10px 14px; border: 1px solid #d7e5f5; border-radius: 10px; color: #347fd5; background: #f7faff; font-size: 12px; font-weight: 700; text-decoration: none; }
       .report-link:hover { background: #edf5ff; }
-      .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
       a.card { display: block; min-height: 230px; padding: 26px; border: 1px solid #dfe7f2; border-radius: 20px; background: #fff; color: inherit; text-decoration: none; box-shadow: 0 10px 30px #294b7810; transition: transform .18s, box-shadow .18s; }
       a.card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px #294b7818; }
       .icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; color: #fff; background: linear-gradient(145deg, #1985eb, #11b8cb 60%, #7456ed); font-size: 22px; }
@@ -33,6 +33,7 @@
       .description { color: #687992; font-size: 13px; line-height: 1.75; }
       .open { display: inline-block; margin-top: 16px; color: #257bd0; font-size: 12px; font-weight: 700; }
       footer { margin-top: 24px; color: #91a0b5; font-size: 11px; line-height: 1.7; }
+      @media (max-width: 900px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       @media (max-width: 760px) { .use-case { grid-template-columns: 1fr; gap: 16px; padding: 18px; }.use-case-intro { padding: 0 0 14px; border-right: 0; border-bottom: 1px solid #e6edf6; }.use-step { padding: 0; }.use-step span { margin-bottom: 5px; } }
       @media (max-width: 640px) { body { padding: 28px 16px; }.cards { grid-template-columns: 1fr; }a.card { min-height: 195px; padding: 21px; } }
     </style>
@@ -42,7 +43,7 @@
       <header>
         <span class="eyebrow">LEARNING BY DOING</span>
         <h1>知行教育实验室</h1>
-        <p>面向真实课堂的两个原型：一个帮助老师练习教学决策，一个帮助老师发现学生会不会把刚学的知识用到新问题里。</p>
+        <p>三个教育场景原型：练习课堂决策、观察知识迁移，以及帮助学生核对科研实验的计划与执行。</p>
       </header>
       <section class="use-case" aria-label="知识迁移诊断的课堂用法">
         <div class="use-case-intro">
@@ -69,8 +70,15 @@
           <div class="description">选一个刚教完的知识点，做 3 道陌生情境小题；查看学生卡点和下一步练习建议。</div>
           <span class="open">开始课堂离堂检测　↗</span>
         </a>
+        <a class="card" href="./experiment-guard.html">
+          <span class="icon">研</span>
+          <div class="label">EXPERIMENT REVIEW</div>
+          <h2>研证 · 实验设计教练</h2>
+          <div class="description">写下研究主张、实验计划与执行材料，核对比较条件，修改后再检查一次。</div>
+          <span class="open">检查实验设计　↗</span>
+        </a>
       </section>
-      <footer>原型项目：生成式模型题目尚需教师复核。公开演示页不托管模型 API 后端。</footer>
+      <footer>原型项目：生成式内容和审查结论需指导老师复核。公开演示页不托管模型 API 后端。</footer>
     </main>
   </body>
 </html>
