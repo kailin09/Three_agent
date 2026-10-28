@@ -14,6 +14,16 @@
       .eyebrow { color: #287fd4; font-size: 12px; font-weight: 700; letter-spacing: .16em; }
       h1 { margin: 10px 0; font-size: clamp(28px, 5vw, 42px); letter-spacing: -.04em; }
       header p { max-width: 600px; color: #637490; line-height: 1.8; }
+      .use-case { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 0; margin: 30px 0 22px; padding: 22px 24px; border: 1px solid #dfe7f2; border-radius: 18px; background: #fff; box-shadow: 0 10px 30px #294b7808; }
+      .use-case-intro { padding-right: 24px; border-right: 1px solid #e6edf6; }
+      .use-case-intro small { color: #3682ce; font-weight: 700; }
+      .use-case-intro h2 { margin: 7px 0; font-size: 19px; }
+      .use-case-intro p, .use-step p { margin: 0; color: #687992; font-size: 12px; line-height: 1.75; }
+      .use-step { position: relative; padding: 3px 20px 0; }
+      .use-step b { display: block; margin-bottom: 7px; color: #263d5d; font-size: 13px; }
+      .use-step span { display: inline-grid; width: 23px; height: 23px; margin-bottom: 10px; place-items: center; border-radius: 8px; color: #2d80d4; background: #eaf3ff; font-size: 11px; font-weight: 700; }
+      .report-link { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 24px; padding: 10px 14px; border: 1px solid #d7e5f5; border-radius: 10px; color: #347fd5; background: #f7faff; font-size: 12px; font-weight: 700; text-decoration: none; }
+      .report-link:hover { background: #edf5ff; }
       .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
       a.card { display: block; min-height: 230px; padding: 26px; border: 1px solid #dfe7f2; border-radius: 20px; background: #fff; color: inherit; text-decoration: none; box-shadow: 0 10px 30px #294b7810; transition: transform .18s, box-shadow .18s; }
       a.card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px #294b7818; }
@@ -23,6 +33,7 @@
       .description { color: #687992; font-size: 13px; line-height: 1.75; }
       .open { display: inline-block; margin-top: 16px; color: #257bd0; font-size: 12px; font-weight: 700; }
       footer { margin-top: 24px; color: #91a0b5; font-size: 11px; line-height: 1.7; }
+      @media (max-width: 760px) { .use-case { grid-template-columns: 1fr; gap: 16px; padding: 18px; }.use-case-intro { padding: 0 0 14px; border-right: 0; border-bottom: 1px solid #e6edf6; }.use-step { padding: 0; }.use-step span { margin-bottom: 5px; } }
       @media (max-width: 640px) { body { padding: 28px 16px; }.cards { grid-template-columns: 1fr; }a.card { min-height: 195px; padding: 21px; } }
     </style>
   </head>
@@ -31,8 +42,18 @@
       <header>
         <span class="eyebrow">LEARNING BY DOING</span>
         <h1>知行教育实验室</h1>
-        <p>两个正在探索中的课堂工具：在课堂情境里观察教学决策，也把学过的知识带到陌生问题中试一试。</p>
+        <p>面向真实课堂的两个原型：一个帮助老师练习教学决策，一个帮助老师发现学生会不会把刚学的知识用到新问题里。</p>
       </header>
+      <section class="use-case" aria-label="知识迁移诊断的课堂用法">
+        <div class="use-case-intro">
+          <small>老师什么时候用？</small>
+          <h2>讲完一个知识点后的 5 分钟</h2>
+          <p>作为离堂小测，快速看学生是否能把刚学的内容迁移到新题，而不是再做一遍同款例题。</p>
+        </div>
+        <div class="use-step"><span>1</span><b>学生独立作答</b><p>换一个生活情境、表示方式或题目条件，记录答案和提示使用情况。</p></div>
+        <div class="use-step"><span>2</span><b>老师决定下一步</b><p>看卡点落在哪一类，再安排全班复习重点或给部分学生补一道针对题。</p></div>
+      </section>
+      <a class="report-link" href="./classroom-report.html">看一份教师端课堂反馈示例 <span>↗</span></a>
       <section class="cards" aria-label="教育工具">
         <a class="card" href="./classroom.html">
           <span class="icon">课</span>
@@ -45,8 +66,8 @@
           <span class="icon">迁</span>
           <div class="label">TRANSFER LEARNING CHECK</div>
           <h2>知识迁移诊断</h2>
-          <div class="description">选择现有题组，或输入年级、学科与知识点，检查自己如何把知识用到新情境。</div>
-          <span class="open">开始迁移练习　↗</span>
+          <div class="description">选一个刚教完的知识点，做 3 道陌生情境小题；查看学生卡点和下一步练习建议。</div>
+          <span class="open">开始课堂离堂检测　↗</span>
         </a>
       </section>
       <footer>原型项目：生成式模型题目尚需教师复核。公开演示页不托管模型 API 后端。</footer>
