@@ -1,4 +1,5 @@
 .upload-workspace { margin: 3px 0 22px; padding: 19px; border: 1px solid var(--line); border-radius: 10px; background: #fcfcfd; }
+.upload-loading { margin: 3px 0 18px; padding: 16px; border: 1px dashed var(--line-strong); border-radius: 10px; color: var(--ink-2); font-size: 12px; }
 .upload-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .upload-heading h3 { margin: 4px 0 0; color: var(--ink); font-size: 14px; font-weight: 700; }
 .upload-kicker { color: var(--accent-ink); font-size: 10px; font-weight: 750; letter-spacing: .11em; }

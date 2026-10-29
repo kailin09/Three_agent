@@ -106,7 +106,7 @@ function MaterialUpload() {
       <div><span className="upload-kicker">材料输入</span><h3 id="upload-title">上传实验材料</h3></div>
       <span className="upload-local">只在本机读取</span>
     </div>
-    <p className="upload-description">提取出的文字会放入上方对应文本框，并参与现有规则检查。文件不会传到服务器；图片、图表和扫描页暂不分析。</p>
+    <p className="upload-description">提取出的文字会放入下方对应文本框，并参与现有规则检查。文件不会传到服务器；图片、图表和扫描页暂不分析。</p>
     <div className="upload-controls">
       <label htmlFor="upload-role">材料属于</label>
       <select id="upload-role" value={role} onChange={(event) => setRole(event.target.value)} disabled={busy}>

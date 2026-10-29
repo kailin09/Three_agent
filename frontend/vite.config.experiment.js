@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   base: './',
+  define: { 'process.env.NODE_ENV': JSON.stringify('production') },
   plugins: [react(), tailwindcss()],
   build: {
     outDir: 'experiment-guard-assets',

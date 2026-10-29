@@ -42,10 +42,10 @@
       </section>
 
       <div class="workflow-line" aria-label="使用流程">
-        <span><b>1</b> 描述实验</span>
-        <span><b>2</b> 核对疑点</span>
-        <span><b>3</b> 修改后复查</span>
-        <span><b>4</b> 独立判断</span>
+        <span><b>1</b> 写明主张</span>
+        <span><b>2</b> 上传或填写材料</span>
+        <span><b>3</b> 核对疑点</span>
+        <span><b>4</b> 修改后复查</span>
       </div>
 
       <div class="workspace">
@@ -63,6 +63,7 @@
                 <option value="system">算法与系统性能实验</option>
               </select>
             </div>
+            <div id="material-upload-root"><p class="upload-loading">上传功能正在加载；如果一直显示这行文字，请刷新页面。</p></div>
             <div class="form-block">
               <label for="claim">你希望证明什么？ <em>必填</em></label>
               <textarea id="claim" name="claim" rows="2" placeholder="例如：方法 A 在相同数据和调参条件下，比方法 B 预测更准确。" required></textarea>
@@ -77,8 +78,6 @@
               <textarea id="execution" name="execution" rows="4" placeholder="可粘贴关键代码、配置片段或运行记录。没有执行材料时，系统只审查计划。"></textarea>
               <small>请先删去姓名、密钥和不便公开的数据。</small>
             </div>
-            <div id="material-upload-root"></div>
-
             <fieldset id="data-fields" class="detail-fieldset">
               <legend>数据实验的关键条件</legend>
               <div class="field-grid">
