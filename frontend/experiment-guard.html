@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#f4f7fb" />
     <meta name="description" content="在运行实验前，核对研究主张、实验计划和执行材料是否对应。" />
     <title>研证 · 实验设计教练</title>
+    <link rel="stylesheet" href="./experiment-guard-assets/experiment-upload.css" />
     <link rel="stylesheet" href="./src/experiment-guard.css" />
     <link rel="stylesheet" href="./src/experiment-guard-theme.css" />
     <script src="./src/experiment-guard.js" defer></script>
@@ -76,6 +77,7 @@
               <textarea id="execution" name="execution" rows="4" placeholder="可粘贴关键代码、配置片段或运行记录。没有执行材料时，系统只审查计划。"></textarea>
               <small>请先删去姓名、密钥和不便公开的数据。</small>
             </div>
+            <div id="material-upload-root"></div>
 
             <fieldset id="data-fields" class="detail-fieldset">
               <legend>数据实验的关键条件</legend>
@@ -175,5 +177,6 @@
 
       <footer class="site-footer"><span>研证 · 科研训练原型</span><span>结果仅覆盖本页列出的检查规则；课堂使用前请指导老师复核。 <a href="./BEAUTIFUL_UI_LICENSE.txt">界面参考许可</a></span></footer>
     </main>
+    <script type="module" src="./experiment-guard-assets/experiment-upload.js"></script>
   </body>
 </html>

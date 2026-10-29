@@ -17,6 +17,7 @@ sse_*.txt
 # ===== 前端 =====
 node_modules/
 dist/
+frontend/experiment-guard-assets/
 
 # ===== IDE / 工作区 =====
 .joycode/

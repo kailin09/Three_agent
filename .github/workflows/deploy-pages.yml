@@ -20,12 +20,23 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build experiment material uploader
+        run: |
+          npm ci --prefix frontend
+          npm run build:experiment --prefix frontend
       - name: Prepare education pages
         run: |
           mkdir -p _site/src
           cp frontend/education-index.html _site/index.html
           cp frontend/classroom.html frontend/classroom-report.html frontend/transfer-diagnosis.html frontend/experiment-guard.html _site/
           cp frontend/src/classroom-demo.js frontend/src/classroom.css frontend/src/transfer-demo.js frontend/src/transfer-cards.css frontend/src/experiment-guard.js frontend/src/experiment-guard.css frontend/src/experiment-guard-theme.css _site/src/
+          cp -r frontend/experiment-guard-assets _site/
           cp frontend/BEAUTIFUL_UI_LICENSE.txt _site/
       - name: Upload site
         uses: actions/upload-pages-artifact@v3

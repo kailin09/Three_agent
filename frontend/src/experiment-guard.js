@@ -237,11 +237,20 @@ form.addEventListener('submit', (event) => {
 
 form.addEventListener('input', () => { state.draft = collectInput(); save() })
 form.elements.studyType.addEventListener('change', () => { syncStudyType(); state.draft = collectInput(); save() })
+window.addEventListener('experiment-guard:material', (event) => {
+  const { role, name, text } = event.detail || {}
+  if (!['plan', 'execution'].includes(role) || !text) return
+  const field = form.elements[role]
+  field.value = [field.value.trim(), `【上传材料：${name}】\n${text}`].filter(Boolean).join('\n\n')
+  field.dispatchEvent(new Event('input', { bubbles: true }))
+  field.focus()
+})
 
 document.getElementById('load-data-sample').addEventListener('click', () => { state.history = []; state.audit = null; state.learningAnswer = ''; state.showReference = false; fill(examples.data); renderReport(); form.scrollIntoView({ behavior: 'smooth', block: 'start' }) })
 document.getElementById('load-system-sample').addEventListener('click', () => { state.history = []; state.audit = null; state.learningAnswer = ''; state.showReference = false; fill(examples.system); renderReport(); form.scrollIntoView({ behavior: 'smooth', block: 'start' }) })
 document.getElementById('clear-draft').addEventListener('click', () => {
   state = { draft: null, audit: null, history: [], learningAnswer: '', showReference: false }
+  window.dispatchEvent(new Event('experiment-guard:reset'))
   form.reset()
   syncStudyType()
   document.getElementById('form-error').hidden = true
